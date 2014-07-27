@@ -29,6 +29,12 @@ char addr_str[IPV6_MAX_ADDR_STR_LEN];
 #endif
 #include "debug.h"
 
+#define VIZ_EN      1
+
+#ifdef VIZ_EN
+#include "viz.h"
+#endif
+
 rpl_instance_t instances[RPL_MAX_INSTANCES];
 rpl_dodag_t dodags[RPL_MAX_DODAGS];
 rpl_parent_t parents[RPL_MAX_PARENTS];
@@ -133,6 +139,9 @@ void rpl_del_dodag(rpl_dodag_t *dodag)
 void rpl_leave_dodag(rpl_dodag_t *dodag)
 {
     dodag->joined = 0;
+#ifdef VIZ_EN
+    viz_parent_deselect(dodag->my_preferred_parent->addr.uint8[15]);
+#endif
     dodag->my_preferred_parent = NULL;
     rpl_delete_all_parents();
 }
@@ -164,6 +173,9 @@ rpl_parent_t *rpl_new_parent(rpl_dodag_t *dodag, ipv6_addr_t *address, uint16_t 
             parent->lifetime = dodag->default_lifetime * dodag->lifetime_unit;
             /* dtsn is set at the end of recv_dio function */
             parent->dtsn = 0;
+#ifdef VIZ_EN
+            viz_parent_select(parent->addr.uint8[15]);
+#endif
             return parent;
         }
     }
@@ -194,6 +206,10 @@ void rpl_delete_parent(rpl_parent_t *parent)
                                            &parent->addr)) {
         my_dodag->my_preferred_parent = NULL;
     }
+
+#ifdef VIZ_EN
+    viz_parent_deselect(parent->addr.uint8[15]);
+#endif
 
     memset(parent, 0, sizeof(*parent));
 }
@@ -264,6 +280,9 @@ rpl_parent_t *rpl_find_preferred_parent(void)
 
     if (my_dodag->my_preferred_parent == NULL) {
         my_dodag->my_preferred_parent = best;
+#ifdef VIZ_EN
+        viz_parent_select(my_dodag->my_preferred_parent->addr.uint8[15]);
+#endif
     }
 
     if (!rpl_equal_id(&my_dodag->my_preferred_parent->addr, &best->addr)) {
@@ -272,7 +291,15 @@ rpl_parent_t *rpl_find_preferred_parent(void)
             send_DAO(&my_dodag->my_preferred_parent->addr, 0, false, 0);
         }
 
+#ifdef VIZ_EN
+        viz_parent_deselect(my_dodag->my_preferred_parent->addr.uint8[15]);
+#endif
+
         my_dodag->my_preferred_parent = best;
+
+#ifdef VIZ_EN
+        viz_parent_select(my_dodag->my_preferred_parent->addr.uint8[15]);
+#endif
 
         if (my_dodag->mop != RPL_NO_DOWNWARD_ROUTES) {
             delay_dao();
@@ -363,6 +390,10 @@ void rpl_join_dodag(rpl_dodag_t *dodag, ipv6_addr_t *parent, uint16_t parent_ran
     DEBUG("\tmy_preferred_parent rank\t%02X\n", my_dodag->my_preferred_parent->rank);
     DEBUG("\tmy_preferred_parent lifetime\t%04X\n", my_dodag->my_preferred_parent->lifetime);
 
+#ifdef VIZ_EN
+    viz_parent_select(preferred_parent->addr.uint8[15]);
+#endif
+
     start_trickle(my_dodag->dio_min, my_dodag->dio_interval_doubling, my_dodag->dio_redundancy);
     delay_dao();
 }
@@ -381,6 +412,10 @@ void rpl_global_repair(rpl_dodag_t *dodag, ipv6_addr_t *p_addr, uint16_t rank)
     my_dodag->version = dodag->version;
     my_dodag->dtsn++;
     my_dodag->my_preferred_parent = rpl_new_parent(my_dodag, p_addr, rank);
+#ifdef VIZ_EN
+    viz_parent_select(my_dodag->my_preferred_parent->addr.uint8[15]);
+#endif
+
 
     if (my_dodag->my_preferred_parent == NULL) {
         printf("[Error] no more parent after global repair\n");

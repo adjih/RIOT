@@ -31,6 +31,11 @@
 #include "sixlowpan.h"
 #include "net_help.h"
 
+#define VIZ_EN      1
+
+#ifdef VIZ_EN
+#include "viz.h"
+#endif
 /* You can only run Storing Mode by now. Other unsupported modes lead to default (Storing Mode) */
 #if RPL_DEFAULT_MOP == RPL_STORING_MODE_NO_MC
 #include "rpl/rpl_storing.h"
@@ -202,6 +207,9 @@ void send_DAO_ACK(ipv6_addr_t *destination)
 void recv_rpl_DIO(void)
 {
     DEBUGF("DIO received\n");
+#ifdef VIZ_EN
+      viz_dio(ipv6_buf->srcaddr.uint8[15]);
+#endif
 
     recv_rpl_DIO_mode();
 }
