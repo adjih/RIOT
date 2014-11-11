@@ -151,11 +151,18 @@ int32_t udp_recvfrom(int s, void *buf, uint32_t len, int flags, sockaddr6_t *fro
     payload = (uint8_t *)(m_recv.content.ptr + IPV6_HDR_LEN + UDP_HDR_LEN);
 
     memset(buf, 0, len);
+    /* cppcheck: the memset sets parts of the buffer to 0 even though it will
+     * be overwritten by the next memcpy. However without the memset the buffer
+     * could contain stale data (if the copied data is less then the buffer
+     * length) and setting just the left over part of the buffer to 0 would
+     * introduce overhead (calculation how much needs to be zeroed).
+     */
+    /* cppcheck-suppress redundantCopy */
     memcpy(buf, payload, NTOHS(udp_header->length) - UDP_HDR_LEN);
     memcpy(&from->sin6_addr, &ipv6_header->srcaddr, 16);
     from->sin6_family = AF_INET6;
     from->sin6_flowinfo = 0;
-    from->sin6_port = NTOHS(udp_header->src_port);
+    from->sin6_port = udp_header->src_port;
     *fromlen = sizeof(sockaddr6_t);
 
     msg_reply(&m_recv, &m_send);

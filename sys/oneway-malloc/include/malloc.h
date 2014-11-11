@@ -7,7 +7,8 @@
  */
 
 /**
- * @addtogroup  oneway_malloc
+ * @defgroup    oneway_malloc
+ * @ingroup     sys
  * @{
  * @file        malloc.h
  * @brief       A malloc implementation for MSP-430 boards without free.
@@ -26,6 +27,10 @@
 #define __MALLOC_H
 
 #include <stdlib.h>
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 /**
  * @brief       Allocation a block of memory.
@@ -63,6 +68,10 @@ void *calloc(int size, size_t cnt);
  * @param[in]   ptr   The ignored argument.
  */
 void free(void *ptr);
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif /* __MALLOC_H */
 

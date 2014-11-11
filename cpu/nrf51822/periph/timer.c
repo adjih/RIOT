@@ -43,14 +43,14 @@ static timer_conf_t timer_config[TIMER_NUMOF];
 
 int timer_init(tim_t dev, unsigned int ticks_per_us, void (*callback)(int))
 {
-
     NRF_TIMER_Type *timer;
 
     switch (dev) {
 #if TIMER_0_EN
         case TIMER_0:
             timer = TIMER_0_DEV;
-            timer->BITMODE = TIMER_BITMODE_BITMODE_32Bit;    /* 32 Bit Mode */
+            timer->POWER = 1;
+            timer->BITMODE = TIMER_0_BITMODE;
             NVIC_SetPriority(TIMER_0_IRQ, TIMER_IRQ_PRIO);
             NVIC_EnableIRQ(TIMER_0_IRQ);
             break;
@@ -58,7 +58,8 @@ int timer_init(tim_t dev, unsigned int ticks_per_us, void (*callback)(int))
 #if TIMER_1_EN
         case TIMER_1:
             timer = TIMER_1_DEV;
-            timer->BITMODE = TIMER_BITMODE_BITMODE_16Bit;    /* 16 Bit Mode */
+            timer->POWER = 1;
+            timer->BITMODE = TIEMR_1_BITMODE;
             NVIC_SetPriority(TIMER_1_IRQ, TIMER_IRQ_PRIO);
             NVIC_EnableIRQ(TIMER_1_IRQ);
             break;
@@ -66,7 +67,8 @@ int timer_init(tim_t dev, unsigned int ticks_per_us, void (*callback)(int))
 #if TIMER_2_EN
         case TIMER_2:
             timer = TIMER_2_DEV;
-            timer->BITMODE = TIMER_BITMODE_BITMODE_16Bit;    /* 16 Bit Mode */
+            timer->POWER = 1;
+            timer->BITMODE = TIMER_2_BITMODE;
             NVIC_SetPriority(TIMER_2_IRQ, TIMER_IRQ_PRIO);
             NVIC_EnableIRQ(TIMER_2_IRQ);
             break;
@@ -102,14 +104,17 @@ int timer_init(tim_t dev, unsigned int ticks_per_us, void (*callback)(int))
         default:
             return -1;
     }
-    /* timer->INTENSET = TIMER_INTENSET_COMPARE0_Enabled << TIMER_INTENSET_COMPARE0_Pos; */
+
+    /* clear all compare channels */
     timer->SHORTS = (TIMER_SHORTS_COMPARE0_CLEAR_Enabled << TIMER_SHORTS_COMPARE0_CLEAR_Pos);
     timer->SHORTS = (TIMER_SHORTS_COMPARE1_CLEAR_Enabled << TIMER_SHORTS_COMPARE1_CLEAR_Pos);
     timer->SHORTS = (TIMER_SHORTS_COMPARE2_CLEAR_Enabled << TIMER_SHORTS_COMPARE2_CLEAR_Pos);
     timer->SHORTS = (TIMER_SHORTS_COMPARE3_CLEAR_Enabled << TIMER_SHORTS_COMPARE3_CLEAR_Pos);
+
+    /* start the timer */
     timer->TASKS_START = 1;
 
-    return 1;
+    return 0;
 }
 
 int timer_set(tim_t dev, int channel, unsigned int timeout)
@@ -344,9 +349,8 @@ void timer_reset(tim_t dev)
 }
 
 #if TIMER_0_EN
-__attribute__((naked)) void TIMER_0_ISR(void)
+void TIMER_0_ISR(void)
 {
-    ISR_ENTER();
     for(int i = 0; i < TIMER_0_CHANNELS; i++){
         if(TIMER_0_DEV->EVENTS_COMPARE[i] == 1){
             TIMER_0_DEV->EVENTS_COMPARE[i] = 0;
@@ -357,14 +361,12 @@ __attribute__((naked)) void TIMER_0_ISR(void)
     if (sched_context_switch_request) {
         thread_yield();
     }
-    ISR_EXIT();
 }
 #endif
 
 #if TIMER_1_EN
-__attribute__((naked)) void TIMER_1_ISR(void)
+void TIMER_1_ISR(void)
 {
-    ISR_ENTER();
     for(int i = 0; i < TIMER_1_CHANNELS; i++){
         if(TIMER_1_DEV->EVENTS_COMPARE[i] == 1){
             TIMER_1_DEV->EVENTS_COMPARE[i] = 0;
@@ -375,14 +377,12 @@ __attribute__((naked)) void TIMER_1_ISR(void)
     if (sched_context_switch_request) {
         thread_yield();
     }
-    ISR_EXIT();
 }
 #endif
 
 #if TIMER_2_EN
-__attribute__((naked)) void TIMER_2_ISR(void)
+void TIMER_2_ISR(void)
 {
-    ISR_ENTER();
     for(int i = 0; i < TIMER_2_CHANNELS; i++){
         if(TIMER_2_DEV->EVENTS_COMPARE[i] == 1){
             TIMER_2_DEV->EVENTS_COMPARE[i] = 0;
@@ -393,6 +393,5 @@ __attribute__((naked)) void TIMER_2_ISR(void)
     if (sched_context_switch_request) {
         thread_yield();
     }
-    ISR_EXIT();
 }
 #endif

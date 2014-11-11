@@ -47,15 +47,14 @@ ifneq (,$(filter sixlowpan,$(USEMODULE)))
 	USEMODULE += vtimer
 endif
 
-ifneq (,$(filter posix,$(USEMODULE)))
-	USEMODULE += uart0
-	USEMODULE += timex
-	USEMODULE += vtimer
-endif
-
 ifneq (,$(filter uart0,$(USEMODULE)))
 	USEMODULE += lib
 	USEMODULE += posix
+endif
+
+ifneq (,$(filter posix,$(USEMODULE)))
+	USEMODULE += timex
+	USEMODULE += vtimer
 endif
 
 ifneq (,$(filter cbor,$(USEMODULE)))
@@ -67,7 +66,7 @@ ifneq (,$(filter cc110x%,$(USEMODULE)))
 	USEMODULE += vtimer
 endif
 
-ifneq (,$(filter cc110x_ng,$(USEMODULE)))
+ifneq (,$(filter cc110x_legacy,$(USEMODULE)))
 	USEMODULE += transceiver
 endif
 
@@ -77,9 +76,8 @@ ifneq (,$(filter cc2420,$(USEMODULE)))
 endif
 
 ifneq (,$(filter at86rf231,$(USEMODULE)))
-	USEMODULE += transceiver
+	USEMODULE += netdev_802154
 	USEMODULE += ieee802154
-	USEMODULE += vtimer
 endif
 
 ifneq (,$(filter vtimer,$(USEMODULE)))
@@ -89,10 +87,15 @@ endif
 ifneq (,$(filter net_if,$(USEMODULE)))
 	USEMODULE += transceiver
 	USEMODULE += net_help
+	USEMODULE += hashes
 endif
 
 ifneq (,$(filter ccn_lite,$(USEMODULE)))
 	USEMODULE += crypto
+endif
+
+ifneq (,$(filter netdev_802154,$(USEMODULE)))
+	USEMODULE += netdev_base
 endif
 
 ifneq (,$(filter rgbled,$(USEMODULE)))
@@ -105,4 +108,8 @@ endif
 
 ifneq (,$(filter libfixmath-unittests,$(USEMODULE)))
 	USEPKG += libfixmath
+endif
+
+ifneq (,$(filter defaulttransceiver,$(USEMODULE)))
+	FEATURES_REQUIRED += transceiver
 endif

@@ -217,27 +217,27 @@ int main(int argc, char **argv)
                 /* process long opts */
             case 0:
                 if (strcmp(long_options[option_index].name, "interface") == 0) {
-                    sscanf(optarg, "%i", &interface);
+                    sscanf(optarg, "%11i", &interface);
                 }
 
                 if (strcmp(long_options[option_index].name, "dir") == 0) {
-                    sscanf(optarg, "%i", &dir);
+                    sscanf(optarg, "%11i", &dir);
                 }
 
                 if (strcmp(long_options[option_index].name, "reset_release") == 0) {
-                    sscanf(optarg, "%i", &reset_release);
+                    sscanf(optarg, "%11i", &reset_release);
                 }
 
                 if (strcmp(long_options[option_index].name, "reset_set") == 0) {
-                    sscanf(optarg, "%i", &reset_set);
+                    sscanf(optarg, "%11i", &reset_set);
                 }
 
                 if (strcmp(long_options[option_index].name, "vref2_normal") == 0) {
-                    sscanf(optarg, "%i", &vref2_normal);
+                    sscanf(optarg, "%11i", &vref2_normal);
                 }
 
                 if (strcmp(long_options[option_index].name, "vref2_erase") == 0) {
-                    sscanf(optarg, "%i", &vref2_erase);
+                    sscanf(optarg, "%11i", &vref2_erase);
                 }
 
                 break;
@@ -251,11 +251,11 @@ int main(int argc, char **argv)
                 break;
 
             case 'v':
-                sscanf(optarg, "%i", &vendid);
+                sscanf(optarg, "%11i", &vendid);
                 break;
 
             case 'p':
-                sscanf(optarg, "%i", &prodid);
+                sscanf(optarg, "%11i", &prodid);
                 break;
 
             default:
@@ -453,7 +453,7 @@ int print_and_prompt(struct ftdi_device_list *devlist)
                                        curdev->dev,
                                        manufacturer, 128,
                                        description, 128,
-                                       serial, 128)
+                                       serial, 128);
         if (0 > ret) {
             fprintf(stderr, "ftdi_usb_get_strings failed: %d (%s)\n",
                     ret, ftdi_get_error_string(&ftdic));
@@ -473,10 +473,12 @@ int print_and_prompt(struct ftdi_device_list *devlist)
         size_t last = strlen(input) - 1;
 
         if (input[last] == '\n') {
+            /* cppcheck: input is accessed later via *s */
+            /* cppcheck-suppress unreadVariable */
             input[last] = '\0';
         }
 
-        sscanf(s, "%i", &sel);
+        sscanf(s, "%11i", &sel);
     }
 
     return sel;
@@ -534,7 +536,6 @@ void erase(struct ftdi_context *ftdic, const struct layout *l)
 int bb_mpsee(struct ftdi_context *ftdic, uint16_t dir, uint16_t val)
 {
     uint8_t buf[3];
-    int ret;
 
     /* command "set data bits low byte" */
     buf[0] = 0x80;
@@ -559,7 +560,7 @@ int bb_mpsee(struct ftdi_context *ftdic, uint16_t dir, uint16_t val)
     fprintf(stderr, "write %x %x %x\n", buf[0], buf[1], buf[2]);
 #endif
 
-    if ((ret = (ftdi_write_data(ftdic, buf, 3))) < 0) {
+    if ((ftdi_write_data(ftdic, buf, 3)) < 0) {
         perror("ft2232_write error");
         fprintf(stderr, "ft2232_write command %x\n", buf[0]);
         return EXIT_FAILURE;

@@ -16,11 +16,18 @@
  * This file acts as a wrapper between the kernels interrupt interface and the architecture
  * dependent implementation of the interfaces.
  *
+ * @note All functions in this module have to be implemented in a way that it
+ *       is safe to call them from within the context of an ISR.
+ *
  * @author      Hauke Petersen <hauke.petersen@fu-berlin.de>
  */
 
 #ifndef __IRQ_ARCH_H
 #define __IRQ_ARCH_H
+
+#ifdef __cplusplus
+ extern "C" {
+#endif
 
 /**
  * @name Define mapping between kernel internal and arch interfaces
@@ -66,6 +73,9 @@ void irq_arch_restore(unsigned int state);
  */
 int irq_arch_in(void);
 
+#ifdef __cplusplus
+}
+#endif
 
 #endif /* __IRQ_ARCH_H */
 /** @} */

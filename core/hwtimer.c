@@ -122,15 +122,14 @@ void hwtimer_wait(unsigned long ticks)
 {
     DEBUG("hwtimer_wait ticks=%lu\n", ticks);
 
-    if (ticks <= 6 || inISR()) {
+    if ((ticks <= (HWTIMER_SPIN_BARRIER)) || inISR()) {
         hwtimer_spin(ticks);
         return;
     }
 
     mutex_t mutex = MUTEX_INIT;
     mutex_lock(&mutex);
-    /* -2 is to adjust the real value */
-    int res = hwtimer_set(ticks - 2, hwtimer_releasemutex, &mutex);
+    int res = hwtimer_set(ticks - (HWTIMER_WAIT_OVERHEAD), hwtimer_releasemutex, &mutex);
     if (res == -1) {
         mutex_unlock(&mutex);
         hwtimer_spin(ticks);
@@ -149,16 +148,14 @@ static int _hwtimer_set(unsigned long offset, void (*callback)(void*), void *ptr
 {
     DEBUG("_hwtimer_set: offset=%lu callback=%p ptr=%p absolute=%d\n", offset, callback, ptr, absolute);
 
-    if (!inISR()) {
-        dINT();
-    }
+    unsigned state;
+
+    state = disableIRQ();
 
     int n = lifo_get(lifo);
 
     if (n == -1) {
-        if (!inISR()) {
-            eINT();
-        }
+        restoreIRQ(state);
 
         puts("No hwtimer left.");
         return -1;
@@ -178,9 +175,7 @@ static int _hwtimer_set(unsigned long offset, void (*callback)(void*), void *ptr
 
     lpm_prevent_sleep++;
 
-    if (!inISR()) {
-        eINT();
-    }
+    restoreIRQ(state);
 
     return n;
 }
@@ -202,7 +197,7 @@ int hwtimer_remove(int n)
 {
     DEBUG("hwtimer_remove n=%d\n", n);
 
-    int state = disableIRQ();
+    unsigned state = disableIRQ();
     hwtimer_arch_unset(n);
 
     lifo_insert(lifo, n);

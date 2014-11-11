@@ -26,6 +26,10 @@
 #include "cib.h"
 #include "msg.h"
 
+#ifdef __cplusplus
+ extern "C" {
+#endif
+
 /**
  * @brief Thread status list
  * @{
@@ -70,13 +74,18 @@ typedef struct tcb_t {
     cib_t msg_queue;            /**< message queue                  */
     msg_t *msg_array;           /**< memory holding messages        */
 
-    const char *name;           /**< thread's name                  */
+#if defined DEVELHELP || defined(SCHED_TEST_STACK)
     char *stack_start;          /**< thread's stack start address   */
-
+#endif
 #ifdef DEVELHELP
+    const char *name;           /**< thread's name                  */
     int stack_size;             /**< thread's stack size            */
 #endif
 } tcb_t;
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif /* TCB_H_ */
 /** @} */

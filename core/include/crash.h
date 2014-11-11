@@ -24,6 +24,10 @@
 
 #include "kernel.h"
 
+#ifdef __cplusplus
+ extern "C" {
+#endif
+
 /**
  * @brief Handle an unrecoverable error by halting or rebooting the system
  *
@@ -45,6 +49,10 @@
  * @return                  this function never returns
  * */
 NORETURN void core_panic(int crash_code, const char *message);
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif /* __CRASH_H */
 /** @} */

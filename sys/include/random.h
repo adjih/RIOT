@@ -1,3 +1,11 @@
+/*
+ * Copyright (C) 2013 Freie Universität Berlin
+ *
+ * This file is subject to the terms and conditions of the GNU Lesser
+ * General Public License v2.1. See the file LICENSE in the top level
+ * directory for more details.
+ */
+
 
 /**
  * @defgroup    sys_random Random
@@ -6,6 +14,10 @@
  */
 
 #include <inttypes.h>
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 #ifndef PRNG_FLOAT
 #  define PRNG_FLOAT (0)
@@ -64,3 +76,7 @@ double genrand_real_exclusive(void);
 double genrand_res53(void);
 
 #endif /* PRNG_FLOAT */
+
+#ifdef __cplusplus
+}
+#endif

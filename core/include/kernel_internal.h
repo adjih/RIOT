@@ -21,6 +21,10 @@
 
 #include "attributes.h"
 
+#ifdef __cplusplus
+ extern "C" {
+#endif
+
 /**
  * @brief   Initializes scheduler and creates main and idle task
  */
@@ -31,6 +35,9 @@ void kernel_init(void);
  */
 void board_init(void);
 
+/**
+ * @brief Prototype for a thread entry function
+ */
 typedef void *(*thread_task_func_t)(void *arg);
 
 /**
@@ -54,6 +61,10 @@ NORETURN void sched_task_exit(void);
  * @brief   Prints human readable, ps-like thread information for debugging purposes
  */
 void thread_print_stack(void);
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif /* KERNEL_INTERNAL_H_ */
 /** @} */

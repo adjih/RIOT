@@ -1,3 +1,11 @@
+/*
+ * Copyright (C) 2010 Freie Universität Berlin
+ *
+ * This file is subject to the terms and conditions of the GNU Lesser
+ * General Public License v2.1. See the file LICENSE in the top level
+ * directory for more details.
+ */
+
 
 /**
  * @defgroup    sys_ping Ping
@@ -6,6 +14,10 @@
  */
 
 #include "radio/radio.h"
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 void init_payload(void);
 void ping_init(protocol_t protocol, uint8_t channr, radio_address_t addr);
@@ -30,3 +42,7 @@ typedef struct pong {
 typedef struct ping_payload {
     char *payload;
 } ping_payload;
+
+#ifdef __cplusplus
+}
+#endif

@@ -21,6 +21,10 @@
 
 #include "arch/atomic_arch.h"
 
+#ifdef __cplusplus
+ extern "C" {
+#endif
+
 /**
  * @brief Sets a new and returns the old value of a variable atomically
  *
@@ -30,6 +34,10 @@
  * @return The old value of *val*
  */
 unsigned int atomic_set_return(unsigned int *val, unsigned int set);
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif /* _ATOMIC_H */
 /** @} */

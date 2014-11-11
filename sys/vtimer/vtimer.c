@@ -307,7 +307,7 @@ void vtimer_get_localtime(struct tm *localt)
 int vtimer_init(void)
 {
     DEBUG("vtimer_init().\n");
-    int state = disableIRQ();
+    unsigned state = disableIRQ();
     seconds = 0;
 
     longterm_tick_start = 0;
@@ -347,11 +347,10 @@ int vtimer_sleep(timex_t time)
     /**
      * Use spin lock for short periods.
      * Assumes that hardware timer ticks are shorter than a second.
-     * Decision based on hwtimer_wait implementation.
      */
     if (time.seconds == 0) {
         unsigned long ticks = HWTIMER_TICKS(time.microseconds);
-        if (ticks <= 6) {
+        if (ticks <= HWTIMER_SPIN_BARRIER) {
             hwtimer_spin(ticks);
             return 0;
         }
@@ -373,7 +372,7 @@ int vtimer_sleep(timex_t time)
 
 int vtimer_remove(vtimer_t *t)
 {
-    unsigned int irq_state = disableIRQ();
+    unsigned irq_state = disableIRQ();
 
     priority_queue_remove(&shortterm_priority_queue_root, timer_get_node(t));
     priority_queue_remove(&longterm_priority_queue_root, timer_get_node(t));

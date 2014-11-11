@@ -23,6 +23,9 @@
 
 #include "cpu.h"
 
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 /**
  * @name The nominal CPU core clock in this board
@@ -38,6 +41,8 @@
  * @name Assign the UART interface to be used for stdio
  */
 #define STDIO               UART_0
+#define STDIO_BAUDRATE      (115200U)
+#define STDIO_RX_BUFSIZE    (64U)
 
 /**
  * @name LED pin definitions
@@ -72,6 +77,10 @@
  * @brief Initialize board specific hardware, including clock, LEDs and std-IO
  */
 void board_init(void);
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif /** __BOARD_H */
 /** @} */

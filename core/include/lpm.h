@@ -25,6 +25,10 @@
 
 #include "arch/lpm_arch.h"
 
+#ifdef __cplusplus
+ extern "C" {
+#endif
+
 /**
  * @brief   Initialization of power management (including clock setup)
  *
@@ -59,6 +63,10 @@ void lpm_end_awake(void);
  * @return  Current power mode
  */
 enum lpm_mode lpm_get(void);
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif /* __LPM_H_ */
 /** @} */

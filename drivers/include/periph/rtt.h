@@ -5,21 +5,28 @@
  * Public License v2.1. See the file LICENSE in the top level directory for more
  * details.
  */
+
 /**
+ * @defgroup    driver_periph_rtt RTT
  * @ingroup     driver_periph
  * @{
  *
- * @file        rtt.h
+ * @file
  * @brief       Low-level RTT (Real Time Timer) peripheral driver interface
  *              definitions
  *
  * @author      Thomas Eichinger <thomas.eichinger@fu-berlin.de>
+ * @author      Hauke Petersen <hauke.petersen@fu-berlin.de>
  */
 
 #ifndef __RTT_H
 #define __RTT_H
 
 #include "periph_conf.h"
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 /* guard file in case no RTC device was specified */
 #if RTT_NUMOF
@@ -29,12 +36,25 @@
  *
  * @param[in] arg           optional argument to put the callback in the right context
  */
-typedef void(*rtt_alarm_cb_t)(void *arg);
+typedef void(*rtt_cb_t)(void *arg);
 
 /**
  * @brief Initialize RTT module
  */
 void rtt_init(void);
+
+/**
+ * @brief Set a callback for the counter overflow event
+ *
+ * @param[in] cb            Callback to execute on overflow
+ * @param[in] arg           Argument passed to the callback
+ */
+void rtt_set_overflow_cb(rtt_cb_t cb, void *arg);
+
+/**
+ * @brief Clear the overflow callback
+ */
+void rtt_clear_overflow_cb(void);
 
 /**
  * @brief Get the current RTT counter.
@@ -57,7 +77,7 @@ void rtt_set_counter(uint32_t counter);
  * @param[in] cb            Callback executed when alarm is hit.
  * @param[in] arg           Argument passed to callback when alarm is hit.
  */
-void rtt_set_alarm(uint32_t alarm, rtt_alarm_cb_t cb, void *arg);
+void rtt_set_alarm(uint32_t alarm, rtt_cb_t cb, void *arg);
 
 /**
  * @brief Get the value of a set alarm.
@@ -84,5 +104,10 @@ void rtt_poweron(void);
 void rtt_poweroff(void);
 
 #endif /* RTT_NUMOF */
+
+#ifdef __cplusplus
+}
+#endif
+
 #endif /* __RTT_H */
 /** @} */

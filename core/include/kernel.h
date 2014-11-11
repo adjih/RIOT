@@ -33,6 +33,10 @@
 #include "sched.h"
 #include "cpu-conf.h"
 
+#ifdef __cplusplus
+ extern "C" {
+#endif
+
 /**
  * @def KERNEL_CONF_STACKSIZE_DEFAULT
  * @brief A reasonable default stack size that will suffice most smaller tasks
@@ -113,7 +117,7 @@ extern volatile int lpm_prevent_sleep;
 /**
  * @brief Variable used to store system configuration
  *
- * @detail This contains e.g. the node ID, name, default channel and so on
+ * @details This contains e.g. the node ID, name, default channel and so on
  */
 extern config_t sysconfig;
 
@@ -135,6 +139,10 @@ int reboot(int mode);
  * @brief Reboot the system in the usual fashion
  */
 #define RB_AUTOBOOT 0
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif /* KERNEL_H_ */
 /** @} */

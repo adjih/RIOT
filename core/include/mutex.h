@@ -23,6 +23,10 @@
 
 #include "priority_queue.h"
 
+#ifdef __cplusplus
+ extern "C" {
+#endif
+
 /**
  * @brief Mutex structure. Must never be modified by the user.
  */
@@ -91,6 +95,10 @@ void mutex_unlock(mutex_t *mutex);
  * @param[in] mutex Mutex object to unlock, must not be NULL.
  */
 void mutex_unlock_and_sleep(mutex_t *mutex);
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif /* __MUTEX_H_ */
 /** @} */

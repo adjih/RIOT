@@ -21,6 +21,10 @@
 
 #include "kernel_macros.h"
 
+#ifdef __cplusplus
+ extern "C" {
+#endif
+
 /**
  * @def         clist_get_container(NODE, TYPE, MEMBER)
  * @brief       Returns the container of the circular list
@@ -83,6 +87,10 @@ static inline void clist_advance(clist_node_t **list)
  * @param[in]       clist       The list to get printed out.
  */
 void clist_print(clist_node_t *clist);
+#endif
+
+#ifdef __cplusplus
+}
 #endif
 
 #endif /* __CLIST_H */

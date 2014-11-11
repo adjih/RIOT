@@ -27,6 +27,8 @@ static void _gettime_handler(void)
     struct tm now;
     rtc_get_localtime(&now);
 
+    /* cppcheck: see man 3 asctime: obsoleted by POSIX.1-2008 */
+    /* cppcheck-suppress obsoleteFunctionsasctime */
     printf("%s", asctime(&now));
 }
 
@@ -35,7 +37,7 @@ static void _settime_handler(char **argv)
     do {
         short i1, i2, i3;
 
-        int res = sscanf(argv[1], "%hd-%hd-%hd", &i1, &i2, &i3);
+        int res = sscanf(argv[1], "%6hd-%6hd-%6hd", &i1, &i2, &i3);
         if (res != 3) {
             break;
         }
@@ -45,7 +47,7 @@ static void _settime_handler(char **argv)
         now.tm_mon = i2 - 1;
         now.tm_mday = i3;
 
-        res = sscanf(argv[2], "%hd:%hd:%hd", &i1, &i2, &i3);
+        res = sscanf(argv[2], "%6hd:%6hd:%6hd", &i1, &i2, &i3);
         if (res != 3) {
             break;
         }

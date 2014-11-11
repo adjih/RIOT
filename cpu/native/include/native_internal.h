@@ -1,3 +1,11 @@
+/*
+ * Copyright (C) 2013, 2014 Ludwig Ortmann
+ *
+ * This file is subject to the terms and conditions of the GNU Lesser
+ * General Public License v2.1. See the file LICENSE in the top level
+ * directory for more details.
+ */
+
 /**
  * Native CPU internal declarations
  */
@@ -38,6 +46,12 @@
 
 #include "kernel_types.h"
 
+
+/**
+ * Prototype for native's internal callbacks
+ */
+typedef void (*_native_callback_t)(void);
+
 /**
  * internal functions
  */
@@ -63,6 +77,8 @@ extern void (*real_free)(void *ptr);
 extern void* (*real_calloc)(size_t nmemb, size_t size);
 extern void* (*real_malloc)(size_t size);
 extern void* (*real_realloc)(void *ptr, size_t size);
+/* The ... is a hack to save includes: */
+extern int (*real_bind)(int socket, ...);
 extern int (*real_close)(int);
 extern int (*real_dup2)(int, int);
 extern int (*real_execve)(const char *, char *const[], char *const[]);
@@ -70,6 +86,7 @@ extern int (*real_feof)(FILE *stream);
 extern int (*real_ferror)(FILE *stream);
 extern int (*real_fork)(void);
 extern int (*real_getpid)(void);
+extern int (*real_listen)(int socket, int backlog);
 extern int (*real_pause)(void);
 extern int (*real_pipe)(int[2]);
 extern int (*real_printf)(const char *format, ...);
@@ -109,7 +126,7 @@ ssize_t _native_write(int fd, const void *buf, size_t count);
 /**
  * register interrupt handler handler for interrupt sig
  */
-int register_interrupt(int sig, void (*handler)(void));
+int register_interrupt(int sig, _native_callback_t handler);
 
 /**
  * unregister interrupt handler for interrupt sig
