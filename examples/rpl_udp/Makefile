@@ -61,3 +61,10 @@ USEMODULE += rpl
 USEMODULE += udp
 
 include $(RIOTBASE)/Makefile.include
+
+
+#"Then you need to add something like
+#   INCLUDES += -I$(CURDIR)
+# to your application's Makefile." [1] 
+# -- [1] Oleg, private communication
+INCLUDES += -I$(CURDIR)
