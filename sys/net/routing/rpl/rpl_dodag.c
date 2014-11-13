@@ -140,7 +140,7 @@ void rpl_leave_dodag(rpl_dodag_t *dodag)
 {
     dodag->joined = 0;
 #ifdef VIZ_EN
-    viz_parent_deselect(dodag->my_preferred_parent->addr.uint8[15]);
+    viz_parent_deselect(NTOHS(dodag->my_preferred_parent->addr.uint16[7]));
 #endif
     dodag->my_preferred_parent = NULL;
     rpl_delete_all_parents();
@@ -174,7 +174,7 @@ rpl_parent_t *rpl_new_parent(rpl_dodag_t *dodag, ipv6_addr_t *address, uint16_t 
             /* dtsn is set at the end of recv_dio function */
             parent->dtsn = 0;
 #ifdef VIZ_EN
-            viz_parent_select(parent->addr.uint8[15]);
+            viz_parent_select(NTOHS(parent->addr.uint16[7]));
 #endif
             return parent;
         }
@@ -208,7 +208,7 @@ void rpl_delete_parent(rpl_parent_t *parent)
     }
 
 #ifdef VIZ_EN
-    viz_parent_deselect(parent->addr.uint8[15]);
+    viz_parent_deselect(NTOHS(parent->addr.uint16[7]));
 #endif
 
     memset(parent, 0, sizeof(*parent));
@@ -281,7 +281,7 @@ rpl_parent_t *rpl_find_preferred_parent(void)
     if (my_dodag->my_preferred_parent == NULL) {
         my_dodag->my_preferred_parent = best;
 #ifdef VIZ_EN
-        viz_parent_select(my_dodag->my_preferred_parent->addr.uint8[15]);
+        viz_parent_select(NTOHS(my_dodag->my_preferred_parent->addr.uint16[7]));
 #endif
     }
 
@@ -292,13 +292,13 @@ rpl_parent_t *rpl_find_preferred_parent(void)
         }
 
 #ifdef VIZ_EN
-        viz_parent_deselect(my_dodag->my_preferred_parent->addr.uint8[15]);
+        viz_parent_deselect(NTOHS(my_dodag->my_preferred_parent->addr.uint16[7]));
 #endif
 
         my_dodag->my_preferred_parent = best;
 
 #ifdef VIZ_EN
-        viz_parent_select(my_dodag->my_preferred_parent->addr.uint8[15]);
+        viz_parent_select(NTOHS(my_dodag->my_preferred_parent->addr.uint16[7]));
 #endif
 
         if (my_dodag->mop != RPL_NO_DOWNWARD_ROUTES) {
@@ -391,7 +391,7 @@ void rpl_join_dodag(rpl_dodag_t *dodag, ipv6_addr_t *parent, uint16_t parent_ran
     DEBUG("\tmy_preferred_parent lifetime\t%04X\n", my_dodag->my_preferred_parent->lifetime);
 
 #ifdef VIZ_EN
-    viz_parent_select(preferred_parent->addr.uint8[15]);
+    viz_parent_select(NTOHS(preferred_parent->addr.uint16[7]));
 #endif
 
     start_trickle(my_dodag->dio_min, my_dodag->dio_interval_doubling, my_dodag->dio_redundancy);
@@ -413,7 +413,7 @@ void rpl_global_repair(rpl_dodag_t *dodag, ipv6_addr_t *p_addr, uint16_t rank)
     my_dodag->dtsn++;
     my_dodag->my_preferred_parent = rpl_new_parent(my_dodag, p_addr, rank);
 #ifdef VIZ_EN
-    viz_parent_select(my_dodag->my_preferred_parent->addr.uint8[15]);
+    viz_parent_select(NTOHS(my_dodag->my_preferred_parent->addr.uint16[7]));
 #endif
 
 

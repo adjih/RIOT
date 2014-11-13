@@ -208,7 +208,7 @@ void recv_rpl_DIO(void)
 {
     DEBUGF("DIO received\n");
 #ifdef VIZ_EN
-      viz_dio(ipv6_buf->srcaddr.uint8[15]);
+      viz_dio(NTOHS(ipv6_buf->srcaddr.uint16[7]));
 #endif
 
     recv_rpl_DIO_mode();

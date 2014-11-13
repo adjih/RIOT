@@ -36,32 +36,32 @@ typedef enum {
 
 extern radio_address_t id;
 
-void viz_udp_pkt(uint8_t src)
+void viz_udp_pkt(uint16_t src)
 {
-    printf("VIZ: UPD packet from %i\n", src);
-    printf("fw %i %i %i\n", src, DTA_RCVD, id);
+    printf("VIZ: UPD packet from %04x\n", src);
+    printf("fw %04x %i %04x\n", src, DTA_RCVD, id);
 }
 
-void viz_udp_snd(uint8_t dst)
+void viz_udp_snd(uint16_t dst)
 {
-    if (id == 32 || id == 33) {
-        printf("VIZ: UDP send packet to %i\n", dst);
-        printf("fw %i %i %i\n", id, DTA_RCVD, dst);
-    }
+  //if (id == 32 || id == 33) {
+  printf("VIZ: UDP send packet to %04x\n", dst);
+  printf("fw %04x %i %04x\n", id, DTA_RCVD, dst);
+  //}
 }
 
-void viz_parent_select(uint8_t parent)
+void viz_parent_select(uint16_t parent)
 {
-    printf("VIZ: RPL %i selected parent: %i\n", id, parent);
+    printf("VIZ: RPL %04x selected parent: %04x\n", id, parent);
 }
 
-void viz_parent_deselect(uint8_t parent)
+void viz_parent_deselect(uint16_t parent)
 {
-    printf("VIZ: RPL %i deleted parent: %i\n", id, parent);
+    printf("VIZ: RPL %04x deleted parent: %04x\n", id, parent);
 }
 
-void viz_dio(uint8_t src)
+void viz_dio(uint16_t src)
 {
-    printf("VIZ: RPL dio from %i\n", src);
-    printf("fw %i %i %i\n", id, DIO_RCVD, src);
+    printf("VIZ: RPL dio from %04x\n", src);
+    printf("fw %04x %d %04x\n", id, DIO_RCVD, src);
 }
