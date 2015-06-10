@@ -24,8 +24,14 @@
 #include "cpu.h"
 #include "board.h"
 #include "vtimer.h"
+
+#ifdef WITH_FAKE_ADC
 #include "periph/adc.h"
 #include "periph/gpio.h"
+#else /* WITH_FAKE_ADC */
+#include "periph/adc.h"
+#include "periph/gpio.h"
+#endif /* WITH_FAKE_ADC */
 
 #if ADC_NUMOF < 1
 #error "Please enable at least 1 ADC device to run this test"

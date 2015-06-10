@@ -21,6 +21,8 @@
 #ifndef __BOARD_H
 #define __BOARD_H
 
+#define WITH_FAKE_ADC /* this disables ADC, uses back UART_0 */
+
 #include "cpu.h"
 
 #ifdef __cplusplus
@@ -53,7 +55,12 @@ extern "C" {
  * @name Define UART device and baudrate for stdio
  * @{
  */
+#ifdef WITH_FAKE_ADC
+#define STDIO               UART_0
+#else /* WITH_FAKE_ADC */
 #define STDIO               UART_1
+#endif /* WITH_FAKE_ADC */
+
 #define STDIO_BAUDRATE      (115200U)
 #define STDIO_BUFSIZE       (64U)
 /** @} */
