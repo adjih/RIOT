@@ -46,7 +46,8 @@ static void leds_init(void)
 {
     /* green pin */
     RCC->APB2ENR |= RCC_APB2ENR_IOPBEN;
-    LED_GREEN_PORT->CRL = (0x3 << ((LED_GREEN_PIN-8)*4));
+    LED_GREEN_PORT->CRH = (0x3 << ((LED_GREEN_PIN-8)*4));
+
     /* red pin */;
-    LED_RED_PORT->CRL = (0x3 << ((LED_RED_PIN-8)*4));
+    LED_RED_PORT->CRH = (0x3 << ((LED_RED_PIN-8)*4));
 }
