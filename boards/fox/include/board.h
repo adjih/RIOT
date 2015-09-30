@@ -98,9 +98,9 @@ extern "C" {
  * @{
  */
 #define LED_RED_PORT        (GPIOB)
-#define LED_RED_PIN         (10)
+#define LED_RED_PIN         (12)
 #define LED_GREEN_PORT      (GPIOB)
-#define LED_GREEN_PIN       (12)
+#define LED_GREEN_PIN       (10)
 /** @} */
 
 /**
