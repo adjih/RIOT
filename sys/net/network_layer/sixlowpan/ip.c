@@ -481,6 +481,12 @@ void *ipv6_process(void *arg)
         else {
             DEBUG("That's not for me, destination is %s\n", ipv6_addr_to_str(addr_str, IPV6_MAX_ADDR_STR_LEN, &ipv6_buf->destaddr));
 
+	    // [XXX] CA: hack nov 2015 -> prevent crash
+	    DEBUG("work-around: ignoring packet completly");
+	    msg_reply(&m_recv_lowpan, &m_send_lowpan);
+            continue;
+
+	   
             if ((ip_srh_indicator != NULL)
                 && (ipv6_buf->nextheader != IPV6_PROTO_NUM_ICMPV6)
                 && (ip_srh_indicator() == 1)) {

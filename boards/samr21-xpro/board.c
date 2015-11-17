@@ -48,6 +48,8 @@ void board_init(void)
  */
 void led_init(void)
 {
-    LED_PORT.DIRSET.reg = LED_PIN;
-    LED_PORT.OUTSET.reg = LED_PIN;
+    /* back-ported: */
+    LED_PORT.DIRSET.reg = (1 << LED_PIN);
+    LED_PORT.OUTSET.reg = (1 << LED_PIN);
+    LED_PORT.PINCFG[LED_PIN].bit.PULLEN = false;
 }
