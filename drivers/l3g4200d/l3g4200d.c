@@ -38,6 +38,7 @@ int l3g4200d_init(l3g4200d_t *dev, i2c_t i2c, uint8_t address,
 {
     char tmp;
 
+#ifdef BOARD_
     /* initialize the I2C bus */
     if (i2c_init_master(i2c, I2C_SPEED) < 0) {
         return -1;

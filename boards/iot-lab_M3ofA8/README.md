@@ -1,23 +1,24 @@
-# Porting to M3ofA8
+
+# "Porting" RIOT to the M3 on "A8 Open Nodes"
+
+See [Differences between "M3 Open Nodes" and "M3 from A8 Open Nodes"](https://github.com/adjih/exp-iotlab/blob/master/doc/README-diff-M3-M3ofA8.md)
 
 The main issue of supporting the M3 on "Open A8 Nodes" is a more or less
 clean integration in RIOT build system.
 
 A requirement is to be able to build code for both "Open M3 Nodes" and 
-"M3 from Open A8 Nodes" in the same directory, and obtain two different
-files.
+"M3 from Open A8 Nodes" in the same directory, and obtain two different files.
 
 * Simplest way (tried here) is to have ```BOARD=iot-lab_M3ofA8``` instead of ```BOARD-iot-lab_M3```
   The problem is that the ```BOARD``` is used for locating files (in paths
-  in the Makefile), so it is necessary to do some redirections here and then.
+  in the Makefile), so it is necessary to do some redirections here and there.
 
 # Some changes for iot-lab_M3ofA8
 
 ### Minimal changes to compile hello-world with BOARD=iot-lab_M3ofA8
 
 The ```hello-world``` program compiled for a "Open M3 Node" will work on a 
-"M3 of a Open A8 Node" (no hardware differences for the parts that
-are used).
+"M3 of a Open A8 Node" (no hardware difference impact on this program, the hello-world binary for ```BOARD=iot-lab_M3``` runs on M3 of Open A8).
 
 * The file ```board/iot-lab_M3ofA8/Makefile.include``` is the entry point for 
    the board. It is created and just includes the ```Makefile.include``` 
@@ -56,7 +57,8 @@ done in several ways. One can imagine:
   this could be tested. This is complicated, but cleaner because there
   would be an response.
 
-* maybe sending SPI commands ? the SPI of the AT
+* maybe sending SPI commands ? the SPI of the AT86RF231 (radio) is changed
+  on the M3ofA8 
 
 * ...
 
@@ -79,6 +81,10 @@ BOARD=iot-lab_M3 remake -x 2>&1 > log.M3
 BOARD=iot-lab_M3ofA8 remake -x 2>&1 > log.M3ofA8 || true
 kdiff3 log.M3 log.M3ofA8
 ```
+
+or 
+```make -f test-changes.mk WHERE=examples diff-hello-world```
+```make -f test-changes.mk WHERE=examples send-hello-world```
 
 # Tracking RIOT Makefile inclusions (+parts)
 
