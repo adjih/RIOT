@@ -1,0 +1,3 @@
+include $(RIOTBOARD)/iotlab-m3/Makefile.include
+
+INCLUDES += -I$(RIOTBOARD)/iotlab-m3/include
