@@ -535,17 +535,14 @@ static void _event_cb(netdev_t *dev, netdev_event_t event)
             break;
 
         case NETDEV_EVENT_RX_COMPLETE:
-        {
-            sx127x_rx_packet_t *packet = (sx127x_rx_packet_t *) &sx127x._internal.last_packet;
-            events->RxDone(packet->content, packet->size,
-                           packet->rssi_value, packet->snr_value);
             len = dev->driver->recv(dev, NULL, 0, 0);
             dev->driver->recv(dev, payload, len, &packet_info);
+            events->RxDone((uint8_t*)payload, len, packet_info.rssi,
+                           packet_info.snr);
             printf("{Payload: \"%s\" (%d bytes), RSSI: %i, SNR: %i, TOA: %i}\n",
                    payload, (int)len,
                    packet_info.rssi, (int)packet_info.snr,
                    (int)packet_info.time_on_air);
-        }
             break;
 
         case NETDEV_EVENT_RX_TIMEOUT:
