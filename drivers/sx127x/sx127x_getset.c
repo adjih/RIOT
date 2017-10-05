@@ -65,6 +65,13 @@ void sx127x_set_state(sx127x_t *dev, uint8_t state)
 
 void sx127x_set_modem(sx127x_t *dev, uint8_t modem)
 {
+    /* Skip if unchanged to avoid resetting the transceiver below (may end up
+     * in crashes) */
+    if (dev->settings.modem == modem) {
+        DEBUG("[DEBUG] already using modem: %d\n", modem);
+        return;
+    }
+
     DEBUG("[DEBUG] set modem: %d\n", modem);
 
     dev->settings.modem = modem;
