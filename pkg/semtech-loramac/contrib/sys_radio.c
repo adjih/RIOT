@@ -2,6 +2,8 @@
 #include "sx127x.h"
 #include "sx127x_internal.h"
 
+#include "net/lora.h"
+
 /*!
  * \ Sx1276 driver for use of LoRaMac
  */
@@ -199,11 +201,11 @@ void SX1276SetPublicNetwork( bool enable )
 {
     if (enable) {
         /* Use public network syncword */
-        sx127x_set_syncword(dev_ptr, 0x34);
+        sx127x_set_syncword(dev_ptr, LORA_SYNCWORD_PUBLIC);
     }
     else {
-        /* Use public network syncword */
-        sx127x_set_syncword(dev_ptr, 0x12);
+        /* Use private network syncword */
+        sx127x_set_syncword(dev_ptr, LORA_SYNCWORD_PRIVATE);
     }
 }
 
