@@ -4,7 +4,7 @@
 
 #include "net/lora.h"
 
-#define ENABLE_DEBUG (1)
+#define ENABLE_DEBUG (0)
 #include "debug.h"
 
 static sx127x_t *dev_ptr;
