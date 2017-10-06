@@ -4,9 +4,8 @@
 
 #include "net/lora.h"
 
-/*!
- * \ Sx1276 driver for use of LoRaMac
- */
+#define ENABLE_DEBUG (1)
+#include "debug.h"
 
 static sx127x_t *dev_ptr;
 static RadioEvents_t *RadioEvents; 
@@ -15,7 +14,6 @@ static RadioEvents_t *RadioEvents;
  * Radio driver functions implementation wrappers, the netdev2 object
  * is known within the scope of the function
  */
-
 sx127x_t *radio_get_ptr(void)
 {
     return dev_ptr;
@@ -38,6 +36,7 @@ void radio_set_event_ptr(RadioEvents_t *events)
 
 void SX1276Init(RadioEvents_t *events)
 {
+    DEBUG("[semtech-loramac] pkg: initialize radio device\n");
     RadioEvents = events;
     sx127x_init(dev_ptr);
 }
@@ -49,6 +48,7 @@ RadioState_t SX1276GetStatus(void)
 
 void SX1276SetModem(RadioModems_t modem)
 {
+    DEBUG("[semtech-loramac] pkg: set modem\n");
     sx127x_set_modem(dev_ptr, (uint8_t)modem);
 }
 
@@ -65,7 +65,7 @@ bool SX1276IsChannelFree(RadioModems_t modem, uint32_t freq,
 
 uint32_t SX1276Random(void)
 {
-     return sx127x_random(dev_ptr);
+    return sx127x_random(dev_ptr);
 }
 
 void SX1276SetRxConfig(RadioModems_t modem, uint32_t bandwidth,
@@ -103,6 +103,7 @@ void SX1276SetTxConfig(RadioModems_t modem, int8_t power, uint32_t fdev,
                        bool fixLen, bool crcOn, bool freqHopOn,
                        uint8_t hopPeriod, bool iqInverted, uint32_t timeout)
 {
+    DEBUG("[semtech-loramac] pkg: set TX config\n");
     (void) fdev;
     sx127x_set_modem(dev_ptr, modem);
     sx127x_set_freq_hop(dev_ptr, freqHopOn);
@@ -188,7 +189,8 @@ void SX1276SetMaxPayloadLength(RadioModems_t modem, uint8_t max)
 
 bool SX1276CheckRfFrequency(uint32_t frequency)
 {
-    // Implement check. Currently all frequencies are supported
+    /* Implement check. Currently all frequencies are supported */
+    DEBUG("[semtech-loramac] pkg: check RF frequency\n");
     return true;
 }
 
@@ -197,8 +199,9 @@ void SX1276SetTxContinuousWave( uint32_t freq, int8_t power, uint16_t time )
     /* TODO */
 }
 
-void SX1276SetPublicNetwork( bool enable )
+void SX1276SetPublicNetwork(bool enable)
 {
+    DEBUG("[semtech-loramac] pkg: set public network '%d'\n", enable);
     if (enable) {
         /* Use public network syncword */
         sx127x_set_syncword(dev_ptr, LORA_SYNCWORD_PUBLIC);
