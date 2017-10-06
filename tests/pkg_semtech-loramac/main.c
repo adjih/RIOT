@@ -43,6 +43,7 @@
 #define MSG_TYPE_ISR                   (0x3456)
 #define MSG_TYPE_RX_TIMEOUT            (0x3457)
 #define MSG_TYPE_TX_TIMEOUT            (0x3458)
+#define MSG_TYPE_MAC_TIMEOUT           (0x3459)
 
 static char stack[LORAMAC_STACKSIZE];
 static kernel_pid_t _loop_pid;
