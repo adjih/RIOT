@@ -15,6 +15,8 @@ Maintainer: Miguel Luis and Gregory Cristian
 #include "xtimer.h"
 #include "msg.h"
 
+#define MSG_TYPE_MAC_TIMEOUT           (0x3459)
+
 /*!
  * \brief Timer object description
  */
@@ -24,6 +26,7 @@ typedef struct TimerEvent_s
     uint8_t running;
     xtimer_t dev;
 	msg_t msg;
+	void (*cb)(void);
 }TimerEvent_t;
 
 /*!
@@ -105,4 +108,5 @@ TimerTime_t TimerGetFutureTime( TimerTime_t eventInFuture );
  * \brief Manages the entry into ARM cortex deep-sleep mode
  */
 void TimerLowPowerHandler( void );
+void set_mac_pid(kernel_pid_t pid);
 #endif  // __TIMER_H__

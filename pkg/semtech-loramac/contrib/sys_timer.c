@@ -19,7 +19,7 @@ Maintainer: Miguel Luis and Gregory Cristian
 
 static kernel_pid_t _mac_pid;
 
-void set_mac_pid(kernet_pid_t pid)
+void set_mac_pid(kernel_pid_t pid)
 {
 	_mac_pid = pid;
 }
@@ -28,7 +28,7 @@ void TimerInit( TimerEvent_t *obj, void ( *cb )( void ) )
 {
     obj->dev.target = 0;
     obj->running = 0;
-    obj->dev.callback = (xtimer_callback_t) cb;
+    obj->cb = cb;
 }
 
 void TimerReset( TimerEvent_t *obj )
@@ -40,7 +40,11 @@ void TimerReset( TimerEvent_t *obj )
 void TimerStart( TimerEvent_t *obj )
 {
     obj->running = 1;
-    xtimer_set(&(obj->dev), obj->timeout);
+	xtimer_t *timer = &(obj->dev);
+	msg_t *msg = &(obj->msg);
+	msg->type = MSG_TYPE_MAC_TIMEOUT;
+	msg->content.ptr = obj->cb;
+    xtimer_set_msg(timer, obj->timeout, msg, _mac_pid);
 }
  
 void TimerStop( TimerEvent_t *obj )

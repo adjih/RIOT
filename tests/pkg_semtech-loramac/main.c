@@ -43,7 +43,6 @@
 #define MSG_TYPE_ISR                   (0x3456)
 #define MSG_TYPE_RX_TIMEOUT            (0x3457)
 #define MSG_TYPE_TX_TIMEOUT            (0x3458)
-#define MSG_TYPE_MAC_TIMEOUT           (0x3459)
 
 static char stack[LORAMAC_STACKSIZE];
 static kernel_pid_t _loop_pid;
@@ -610,8 +609,14 @@ void *_event_loop(void *arg)
                 events->TxTimeout();
                 break;
 
+			case MSG_TYPE_MAC_TIMEOUT:
+                DEBUG("[semtech-loramac] test: MAC timeout\n");
+				void (*function)(void) = msg.content.ptr;
+				function();
+				break;
+
             default:
-                DEBUG("Unexpected msg type\n");
+                DEBUG("Unexpected msg type: %04x\n", msg.type);
                 break;
         }
     }
@@ -645,6 +650,7 @@ int main( void )
         return -1;
     }
 
+	set_mac_pid(_loop_pid);
     while(1) {
         switch(DeviceState) {
             case DEVICE_STATE_INIT:
