@@ -43,6 +43,11 @@
 #define MSG_TYPE_ISR                   (0x3456)
 #define MSG_TYPE_RX_TIMEOUT            (0x3457)
 #define MSG_TYPE_TX_TIMEOUT            (0x3458)
+#define MSG_TYPE_LORAMAC_CMD           (0x3460)
+
+#define LORAMAC_CMD_ENABLE_ADR         (0x01)
+#define LORAMAC_CMD_SET_PUBLIC         (0x02)
+#define LORAMAC_CMD_SET_REGION         (0x03)
 
 static char stack[LORAMAC_STACKSIZE];
 static kernel_pid_t _loop_pid;
@@ -56,7 +61,7 @@ static netdev_t *netdev;
 
 #define LORAWAN_DEFAULT_DATARATE                    DR_0
 
-#define LORAWAN_CONFIRMED_MSG_ON                    (LORAMAC_DEFAULT_TX_MODE == LORAMAC_TX_CNF)
+#define LORAWAN_CONFIRMED_MSG_ON                    (LORAMAC_DEFAULT_TX_MODE != LORAMAC_TX_CNF)
 
 #define LORAWAN_ADR_ON                              1
 
@@ -159,6 +164,11 @@ struct ComplianceTest_s {
 uint8_t BoardGetBatteryLevel(void) {
     return 50;
 }
+
+void BoardGetUniqueId(uint8_t *DevEui) {
+    *DevEui = 10;
+}
+
 
 /* Prepares the payload of the frame */
 static void PrepareTxFrame(uint8_t port)
@@ -586,6 +596,44 @@ void *_event_loop(void *arg)
     static msg_t _msg_q[LORAMAC_MSG_QUEUE];
     msg_init_queue(_msg_q, LORAMAC_MSG_QUEUE);
     RadioEvents_t *events;
+	msg_t reply;
+
+    LoRaMacPrimitives_t LoRaMacPrimitives;
+    LoRaMacCallback_t LoRaMacCallbacks;
+
+	DEBUG("[semtech-loramac] test: initializing loramac\n");
+	LoRaMacPrimitives.MacMcpsConfirm = McpsConfirm;
+	LoRaMacPrimitives.MacMcpsIndication = McpsIndication;
+	LoRaMacPrimitives.MacMlmeConfirm = MlmeConfirm;
+	LoRaMacCallbacks.GetBatteryLevel = BoardGetBatteryLevel;
+#if defined(REGION_AS923)
+	LoRaMacInitialization(&LoRaMacPrimitives, &LoRaMacCallbacks,
+						  LORAMAC_REGION_AS923);
+#elif defined(REGION_AU915)
+	LoRaMacInitialization(&LoRaMacPrimitives, &LoRaMacCallbacks,
+						  LORAMAC_REGION_AU915);
+#elif defined(REGION_CN779)
+	LoRaMacInitialization(&LoRaMacPrimitives, &LoRaMacCallbacks,
+						  LORAMAC_REGION_CN779);
+#elif defined(REGION_EU868)
+	LoRaMacInitialization(&LoRaMacPrimitives, &LoRaMacCallbacks,
+						  LORAMAC_REGION_EU868);
+#elif defined(REGION_IN865)
+	LoRaMacInitialization(&LoRaMacPrimitives, &LoRaMacCallbacks,
+						  LORAMAC_REGION_IN865);
+#elif defined(REGION_KR920)
+	LoRaMacInitialization(&LoRaMacPrimitives, &LoRaMacCallbacks,
+						  LORAMAC_REGION_KR920);
+#elif defined(REGION_US915)
+	LoRaMacInitialization(&LoRaMacPrimitives, &LoRaMacCallbacks,
+						  LORAMAC_REGION_US915);
+#elif defined(REGION_US915_HYBRID)
+	LoRaMacInitialization(&LoRaMacPrimitives, &LoRaMacCallbacks,
+						  LORAMAC_REGION_US915_HYBRID);
+#else
+#error "Please define a region in the compiler options."
+#endif
+
 
     while (1) {
         msg_t msg;
@@ -614,7 +662,12 @@ void *_event_loop(void *arg)
 				void (*function)(void) = msg.content.ptr;
 				function();
 				break;
-
+			case MSG_TYPE_LORAMAC_CMD:
+                DEBUG("[semtech-loramac] test: MAC timeout\n");
+				void (*cmd)(void) = msg.content.ptr;
+				cmd();
+				msg_reply(&msg, &reply);
+				break;
             default:
                 DEBUG("Unexpected msg type: %04x\n", msg.type);
                 break;
@@ -622,19 +675,68 @@ void *_event_loop(void *arg)
     }
 }
 
+typedef void LORAMAC_CMD;
+LORAMAC_CMD _loramac_enable_adr(void)
+{
+    MibRequestConfirm_t mibReq;
+	mibReq.Type = MIB_ADR;
+	mibReq.Param.AdrEnable = LORAWAN_ADR_ON;
+	LoRaMacMibSetRequestConfirm(&mibReq);
+}
+
+LORAMAC_CMD _loramac_set_public(void)
+{
+    MibRequestConfirm_t mibReq;
+	mibReq.Type = MIB_PUBLIC_NETWORK;
+	mibReq.Param.EnablePublicNetwork = LORAWAN_PUBLIC_NETWORK;
+	LoRaMacMibSetRequestConfirm(&mibReq);
+}
+
+LORAMAC_CMD _loramac_setup_region(void)
+{
+    MibRequestConfirm_t mibReq;
+#if defined(REGION_EU868)
+	LoRaMacTestSetDutyCycleOn(LORAWAN_DUTYCYCLE_ON);
+
+#if (USE_SEMTECH_DEFAULT_CHANNEL_LINEUP == 1)
+	LoRaMacChannelAdd(3, (ChannelParams_t)LC4);
+	LoRaMacChannelAdd(4, (ChannelParams_t)LC5);
+	LoRaMacChannelAdd(5, (ChannelParams_t)LC6);
+	LoRaMacChannelAdd(6, (ChannelParams_t)LC7);
+	LoRaMacChannelAdd(7, (ChannelParams_t)LC8);
+	LoRaMacChannelAdd(8, (ChannelParams_t)LC9);
+	LoRaMacChannelAdd(9, (ChannelParams_t)LC10);
+
+	mibReq.Type = MIB_RX2_DEFAULT_CHANNEL;
+	mibReq.Param.Rx2DefaultChannel = (Rx2ChannelParams_t){ 869525000, DR_3 };
+	LoRaMacMibSetRequestConfirm(&mibReq);
+
+	mibReq.Type = MIB_RX2_CHANNEL;
+	mibReq.Param.Rx2Channel = ( Rx2ChannelParams_t ){ 869525000, DR_3 };
+	LoRaMacMibSetRequestConfirm( &mibReq );
+#endif
+
+#endif
+}
+
+void exec_loramac_cmd(void (*cb)(void))
+{
+	msg_t msg;
+	msg.type = MSG_TYPE_LORAMAC_CMD;
+	msg.content.ptr = cb;
+	msg_send_receive(&msg, &msg, _loop_pid);
+}
 /**
  * Main application entry point.
  */
 int main( void )
 {
-    LoRaMacPrimitives_t LoRaMacPrimitives;
-    LoRaMacCallback_t LoRaMacCallbacks;
-    MibRequestConfirm_t mibReq;
-
     sx127x_setup(&sx127x, &sx127x_params[0]);
     netdev = (netdev_t*) &sx127x;
     netdev->driver = &sx127x_driver;
     netdev->event_callback = _event_cb;
+    MibRequestConfirm_t mibReq;
+	(void) mibReq;
 
     radio_set_ptr(&sx127x);
     xtimer_init();
@@ -655,70 +757,12 @@ int main( void )
         switch(DeviceState) {
             case DEVICE_STATE_INIT:
             {
-                DEBUG("[semtech-loramac] test: initializing loramac\n");
-                LoRaMacPrimitives.MacMcpsConfirm = McpsConfirm;
-                LoRaMacPrimitives.MacMcpsIndication = McpsIndication;
-                LoRaMacPrimitives.MacMlmeConfirm = MlmeConfirm;
-                LoRaMacCallbacks.GetBatteryLevel = BoardGetBatteryLevel;
-#if defined(REGION_AS923)
-                LoRaMacInitialization(&LoRaMacPrimitives, &LoRaMacCallbacks,
-                                      LORAMAC_REGION_AS923);
-#elif defined(REGION_AU915)
-                LoRaMacInitialization(&LoRaMacPrimitives, &LoRaMacCallbacks,
-                                      LORAMAC_REGION_AU915);
-#elif defined(REGION_CN779)
-                LoRaMacInitialization(&LoRaMacPrimitives, &LoRaMacCallbacks,
-                                      LORAMAC_REGION_CN779);
-#elif defined(REGION_EU868)
-                LoRaMacInitialization(&LoRaMacPrimitives, &LoRaMacCallbacks,
-                                      LORAMAC_REGION_EU868);
-#elif defined(REGION_IN865)
-                LoRaMacInitialization(&LoRaMacPrimitives, &LoRaMacCallbacks,
-                                      LORAMAC_REGION_IN865);
-#elif defined(REGION_KR920)
-                LoRaMacInitialization(&LoRaMacPrimitives, &LoRaMacCallbacks,
-                                      LORAMAC_REGION_KR920);
-#elif defined(REGION_US915)
-                LoRaMacInitialization(&LoRaMacPrimitives, &LoRaMacCallbacks,
-                                      LORAMAC_REGION_US915);
-#elif defined(REGION_US915_HYBRID)
-                LoRaMacInitialization(&LoRaMacPrimitives, &LoRaMacCallbacks,
-                                      LORAMAC_REGION_US915_HYBRID);
-#else
-    #error "Please define a region in the compiler options."
-#endif
                 TimerInit(&TxNextPacketTimer, OnTxNextPacketTimerEvent);
 
-                mibReq.Type = MIB_ADR;
-                mibReq.Param.AdrEnable = LORAWAN_ADR_ON;
-                LoRaMacMibSetRequestConfirm(&mibReq);
+				exec_loramac_cmd(_loramac_enable_adr);
+				exec_loramac_cmd(_loramac_set_public);
+				exec_loramac_cmd(_loramac_setup_region);
 
-                mibReq.Type = MIB_PUBLIC_NETWORK;
-                mibReq.Param.EnablePublicNetwork = LORAWAN_PUBLIC_NETWORK;
-                LoRaMacMibSetRequestConfirm(&mibReq);
-
-#if defined(REGION_EU868)
-                LoRaMacTestSetDutyCycleOn(LORAWAN_DUTYCYCLE_ON);
-
-#if (USE_SEMTECH_DEFAULT_CHANNEL_LINEUP == 1)
-                LoRaMacChannelAdd(3, (ChannelParams_t)LC4);
-                LoRaMacChannelAdd(4, (ChannelParams_t)LC5);
-                LoRaMacChannelAdd(5, (ChannelParams_t)LC6);
-                LoRaMacChannelAdd(6, (ChannelParams_t)LC7);
-                LoRaMacChannelAdd(7, (ChannelParams_t)LC8);
-                LoRaMacChannelAdd(8, (ChannelParams_t)LC9);
-                LoRaMacChannelAdd(9, (ChannelParams_t)LC10);
-
-                mibReq.Type = MIB_RX2_DEFAULT_CHANNEL;
-                mibReq.Param.Rx2DefaultChannel = (Rx2ChannelParams_t){ 869525000, DR_3 };
-                LoRaMacMibSetRequestConfirm(&mibReq);
-
-                mibReq.Type = MIB_RX2_CHANNEL;
-                mibReq.Param.Rx2Channel = ( Rx2ChannelParams_t ){ 869525000, DR_3 };
-                LoRaMacMibSetRequestConfirm( &mibReq );
-#endif
-
-#endif
                 DeviceState = DEVICE_STATE_JOIN;
                 break;
             }
