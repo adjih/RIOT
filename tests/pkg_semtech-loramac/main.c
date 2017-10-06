@@ -103,7 +103,7 @@ static netdev_t *netdev;
 #error "Please define a region in the compiler options."
 #endif
 
-static char payload[LORAWAN_APP_DATA_SIZE];
+static char payload[LORAWAN_APP_DATA_SIZE] = { 0 };
 
 static uint8_t DevEui[] = LORAMAC_DEV_EUI_DEFAULT;
 static uint8_t AppEui[] = LORAMAC_APP_EUI_DEFAULT;
@@ -165,8 +165,13 @@ static void PrepareTxFrame(uint8_t port)
 {
     switch(port) {
         case 2:
-            memcpy(AppData, payload, strlen(payload));
+        {
+            size_t p = 0;
+            p += snprintf(payload, 14, "This is RIOT!");
+            payload[p] = '\0';
+            memcpy(AppData, payload, p);
             break;
+        }
 
         case 224:
             if (ComplianceTest.LinkCheck == true) {
@@ -761,9 +766,9 @@ int main( void )
             case DEVICE_STATE_SEND:
                 DEBUG("[semtech-loramac] test: sending frame\n");
                 if (NextTx) {
-                    PrepareTxFrame( AppPort );
+                    PrepareTxFrame(AppPort);
 
-                    NextTx = SendFrame( );
+                    NextTx = SendFrame();
                 }
                 if (ComplianceTest.Running) {
                     /* Schedule next packet transmission */
@@ -793,5 +798,7 @@ int main( void )
                 DeviceState = DEVICE_STATE_INIT;
                 break;
         }
+
+        xtimer_usleep(1);
     }
 }
