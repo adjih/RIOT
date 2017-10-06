@@ -13,6 +13,7 @@ Maintainer: Miguel Luis and Gregory Cristian
 #define __TIMER_H__
 
 #include "xtimer.h"
+#include "msg.h"
 
 /*!
  * \brief Timer object description
@@ -22,6 +23,7 @@ typedef struct TimerEvent_s
     uint32_t timeout;  
     uint8_t running;
     xtimer_t dev;
+	msg_t msg;
 }TimerEvent_t;
 
 /*!
