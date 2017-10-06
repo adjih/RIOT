@@ -15,6 +15,14 @@ Maintainer: Miguel Luis and Gregory Cristian
 
 #include "loramac/board.h"
 #include "xtimer.h"
+#include "thread.h"
+
+static kernel_pid_t _mac_pid;
+
+void set_mac_pid(kernet_pid_t pid)
+{
+	_mac_pid = pid;
+}
 
 void TimerInit( TimerEvent_t *obj, void ( *cb )( void ) )
 {
