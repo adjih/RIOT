@@ -22,5 +22,6 @@ USEMODULE += loramac_mac
 USEMODULE += loramac_mac_region
 USEMODULE += loramac_crypto
 USEMODULE += random
+USEMODULE += shell
 
 include $(RIOTBASE)/Makefile.include

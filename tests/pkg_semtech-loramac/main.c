@@ -20,6 +20,7 @@
 #include <string.h>
 
 #include "msg.h"
+#include "shell.h"
 
 #include "loramac/params.h"
 #include "loramac/board.h"
@@ -250,7 +251,7 @@ static bool SendFrame(void)
 }
 
 /* Function executed on TxNextPacket Timeout event */
-static void OnTxNextPacketTimerEvent(void)
+void OnTxNextPacketTimerEvent(void)
 {
     MibRequestConfirm_t mibReq;
     LoRaMacStatus_t status;
@@ -726,6 +727,97 @@ void exec_loramac_cmd(void (*cb)(void))
 	msg.content.ptr = cb;
 	msg_send_receive(&msg, &msg, _loop_pid);
 }
+
+LORAMAC_CMD _loramac_join(void)
+{
+    MibRequestConfirm_t mibReq;
+#if (LORAMAC_USE_OTAA)
+	DEBUG("[semtech-loramac] test: starting OTAA join\n");
+	MlmeReq_t mlmeReq;
+
+	/* Initialize LoRaMac device unique ID */
+	BoardGetUniqueId(DevEui);
+
+	mlmeReq.Type = MLME_JOIN;
+
+	mlmeReq.Req.Join.DevEui = DevEui;
+	mlmeReq.Req.Join.AppEui = AppEui;
+	mlmeReq.Req.Join.AppKey = AppKey;
+	mlmeReq.Req.Join.NbTrials = 3;
+
+	if (NextTx == true) {
+		LoRaMacMlmeRequest(&mlmeReq);
+	}
+	DeviceState = DEVICE_STATE_SLEEP;
+#else /* ABP join procedure */
+	DEBUG("[semtech-loramac] test: starting ABP join\n");
+	mibReq.Type = MIB_NET_ID;
+	mibReq.Param.NetID = LORAWAN_NETWORK_ID;
+	LoRaMacMibSetRequestConfirm(&mibReq);
+
+	mibReq.Type = MIB_DEV_ADDR;
+	mibReq.Param.DevAddr = DevAddr;
+	LoRaMacMibSetRequestConfirm(&mibReq);
+
+	mibReq.Type = MIB_NWK_SKEY;
+	mibReq.Param.NwkSKey = NwkSKey;
+	LoRaMacMibSetRequestConfirm(&mibReq);
+
+	mibReq.Type = MIB_APP_SKEY;
+	mibReq.Param.AppSKey = AppSKey;
+	LoRaMacMibSetRequestConfirm(&mibReq);
+
+	mibReq.Type = MIB_NETWORK_JOINED;
+	mibReq.Param.IsNetworkJoined = true;
+	LoRaMacMibSetRequestConfirm(&mibReq);
+
+	DeviceState = DEVICE_STATE_SEND;
+#endif
+}
+
+LORAMAC_CMD _loramac_send(void)
+{
+	DEBUG("[semtech-loramac] test: sending frame\n");
+	if (NextTx) {
+		PrepareTxFrame(AppPort);
+
+		NextTx = SendFrame();
+	}
+	if (ComplianceTest.Running) {
+		/* Schedule next packet transmission */
+		TxDutyCycleTime = 5000; /* 5000 ms */
+	}
+	else {
+		/* Schedule next packet transmission */
+		TxDutyCycleTime = APP_TX_DUTYCYCLE + randr(-APP_TX_DUTYCYCLE_RND, APP_TX_DUTYCYCLE_RND);
+	}
+	DeviceState = DEVICE_STATE_CYCLE;
+}
+
+int _cmd_lorawan_init(int argc, char **argv)
+{
+	exec_loramac_cmd(_loramac_enable_adr);
+	exec_loramac_cmd(_loramac_set_public);
+	exec_loramac_cmd(_loramac_setup_region);
+	return 0;
+}
+int _cmd_lorawan_join(int argc, char **argv)
+{
+	exec_loramac_cmd(_loramac_join);
+	return 0;
+}
+int _cmd_lorawan_send(int argc, char **argv)
+{
+	exec_loramac_cmd(_loramac_send);
+	return 0;
+}
+
+static const shell_command_t shell_commands[] = {
+    { "init", "init lorawan", _cmd_lorawan_init },
+    { "join", "try to join lorawan network", _cmd_lorawan_join },
+    { "send", "send a predefined msg", _cmd_lorawan_send },
+    { NULL, NULL, NULL }
+};
 /**
  * Main application entry point.
  */
@@ -753,103 +845,9 @@ int main( void )
     }
 
 	set_mac_pid(_loop_pid);
-    while(1) {
-        switch(DeviceState) {
-            case DEVICE_STATE_INIT:
-            {
-                TimerInit(&TxNextPacketTimer, OnTxNextPacketTimerEvent);
 
-				exec_loramac_cmd(_loramac_enable_adr);
-				exec_loramac_cmd(_loramac_set_public);
-				exec_loramac_cmd(_loramac_setup_region);
-
-                DeviceState = DEVICE_STATE_JOIN;
-                break;
-            }
-
-            case DEVICE_STATE_JOIN:
-            {
-#if (LORAMAC_USE_OTAA)
-                DEBUG("[semtech-loramac] test: starting OTAA join\n");
-                MlmeReq_t mlmeReq;
-
-                /* Initialize LoRaMac device unique ID */
-                BoardGetUniqueId(DevEui);
-
-                mlmeReq.Type = MLME_JOIN;
-
-                mlmeReq.Req.Join.DevEui = DevEui;
-                mlmeReq.Req.Join.AppEui = AppEui;
-                mlmeReq.Req.Join.AppKey = AppKey;
-                mlmeReq.Req.Join.NbTrials = 3;
-
-                if (NextTx == true) {
-                    LoRaMacMlmeRequest(&mlmeReq);
-                }
-                DeviceState = DEVICE_STATE_SLEEP;
-#else /* ABP join procedure */
-                DEBUG("[semtech-loramac] test: starting ABP join\n");
-                mibReq.Type = MIB_NET_ID;
-                mibReq.Param.NetID = LORAWAN_NETWORK_ID;
-                LoRaMacMibSetRequestConfirm(&mibReq);
-
-                mibReq.Type = MIB_DEV_ADDR;
-                mibReq.Param.DevAddr = DevAddr;
-                LoRaMacMibSetRequestConfirm(&mibReq);
-
-                mibReq.Type = MIB_NWK_SKEY;
-                mibReq.Param.NwkSKey = NwkSKey;
-                LoRaMacMibSetRequestConfirm(&mibReq);
-
-                mibReq.Type = MIB_APP_SKEY;
-                mibReq.Param.AppSKey = AppSKey;
-                LoRaMacMibSetRequestConfirm(&mibReq);
-
-                mibReq.Type = MIB_NETWORK_JOINED;
-                mibReq.Param.IsNetworkJoined = true;
-                LoRaMacMibSetRequestConfirm(&mibReq);
-
-                DeviceState = DEVICE_STATE_SEND;
-#endif
-                break;
-            }
-
-            case DEVICE_STATE_SEND:
-                DEBUG("[semtech-loramac] test: sending frame\n");
-                if (NextTx) {
-                    PrepareTxFrame(AppPort);
-
-                    NextTx = SendFrame();
-                }
-                if (ComplianceTest.Running) {
-                    /* Schedule next packet transmission */
-                    TxDutyCycleTime = 5000; /* 5000 ms */
-                }
-                else {
-                    /* Schedule next packet transmission */
-                    TxDutyCycleTime = APP_TX_DUTYCYCLE + randr(-APP_TX_DUTYCYCLE_RND, APP_TX_DUTYCYCLE_RND);
-                }
-                DeviceState = DEVICE_STATE_CYCLE;
-                break;
-
-            case DEVICE_STATE_CYCLE:
-                DEBUG("[semtech-loramac] test: schedule next TX\n");
-                DeviceState = DEVICE_STATE_SLEEP;
-
-                // Schedule next packet transmission
-                TimerSetValue(&TxNextPacketTimer, TxDutyCycleTime);
-                TimerStart(&TxNextPacketTimer);
-                break;
-
-            case DEVICE_STATE_SLEEP:
-                /* Wake up through events */
-                break;
-
-            default:
-                DeviceState = DEVICE_STATE_INIT;
-                break;
-        }
-
-        xtimer_usleep(1);
-    }
+	/* start shell */
+    puts("All up, running the shell now");
+    char line_buf[SHELL_DEFAULT_BUFSIZE];
+    shell_run(shell_commands, line_buf, SHELL_DEFAULT_BUFSIZE);
 }
